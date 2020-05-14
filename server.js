@@ -61,6 +61,9 @@ app.get('/profile/:id', (req, res) => { profileId.handleProfileId(req, res,db)})
    
 //image(update entries)
 app.put('/image',(req, res) => {image.handleImage(req,res, db)})
+
+//handleAPI (Clarifai)
+app.post('/imageurl',(req, res) => {image.handleApi(req,res,)})
  
 
 
