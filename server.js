@@ -74,8 +74,8 @@ app.post('/imageurl',(req, res) => {image.handleApi(req,res,)})
 
 
 //-------LISTEN--------
-app.listen(3000, () =>{
-    console.log('running on 3000!')
+app.listen(process.env.PORT || 3000, () =>{
+    console.log(`running on ${process.env.PORT}`)
 })
 
 
