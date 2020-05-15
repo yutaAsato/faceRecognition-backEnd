@@ -44,7 +44,7 @@ app.use(cors())
 
 
 
-app.get('/', (req, res) => {res.send(db.users)})   
+app.get('/', (req, res) => {res.send("it is working!")})   
 
 
 //singin
@@ -64,6 +64,7 @@ app.put('/image',(req, res) => {image.handleImage(req,res, db)})
 
 //handleAPI (Clarifai)
 app.post('/imageurl',(req, res) => {image.handleApi(req,res,)})
+
  
 
 
