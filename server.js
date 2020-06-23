@@ -30,10 +30,13 @@ const db = knex({
   },
 });
 
+//query postgres database here with nodemon(no deploy, testing only)================
 db.select("*")
   .from("users")
   .where({ id: 2 })
   .then((res) => console.log(res));
+
+// ==================================
 
 //---------importing from controllers folder--------
 
