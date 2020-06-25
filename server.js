@@ -1,49 +1,22 @@
+const { knex, db, bcrypt } = require("./utils/admin");
 const express = require("express");
-const app = express();
-
-const bcrypt = require("bcrypt-nodejs");
 
 const cors = require("cors");
-
-//connects this server to psql databse
-const knex = require("knex");
-
-//for heroku----------
-// const db = knex({
-//   client: "pg",
-//   connection: {
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: {
-//       rejectUnauthorized: false,
-//     },
-//   },
-// });
-
-//for local----------
-const db = knex({
-  client: "pg",
-  connection: {
-    host: "127.0.0.1",
-    user: "postgres",
-    password: "oblivion",
-    database: "facerecognition",
-  },
-});
-
-//query postgres database here with nodemon(no deploy, testing only)================
-db.select("*")
-  .from("users")
-  .where({ id: 2 })
-  .then((res) => console.log(res));
-
-// ==================================
-
+const app = require("express")();
 //---------importing from controllers folder--------
 
 const register = require("./controllers/register");
 const signin = require("./controllers/signin");
 const profileId = require("./controllers/profileId");
 const image = require("./controllers/image");
+
+const {
+  handleSignin,
+  handleRegister,
+  handleProfileId,
+  handleImage,
+  handleApi,
+} = require("./controllers/controllers");
 
 //------------------
 
@@ -60,29 +33,19 @@ app.get("/", (req, res) => {
 });
 
 //singin
-app.post("/signin", (req, res) => {
-  signin.handleSignin(req, res, db, bcrypt);
-});
+app.post("/signin", handleSignin);
 
 //register
-app.post("/register", (req, res) => {
-  register.handleRegister(req, res, db, bcrypt);
-});
+app.post("/register", handleRegister);
 
 //profileId
-app.get("/profile/:id", (req, res) => {
-  profileId.handleProfileId(req, res, db);
-});
+app.get("/profile/:id", handleProfileId);
 
 //image(update entries)
-app.put("/image", (req, res) => {
-  image.handleImage(req, res, db);
-});
+app.put("/image", handleImage);
 
 //handleAPI (Clarifai)
-app.post("/imageurl", (req, res) => {
-  image.handleApi(req, res);
-});
+app.post("/imageurl", handleApi);
 
 //-------LISTEN--------
 
@@ -98,3 +61,10 @@ app.listen(process.env.PORT || 3000, () => {
 /profile/:userId --> GET = user
 /image(entriesupdate) --> PUT  = user
 */
+
+//=======DEV ONLY===============================================================================
+//query postgres database here with nodemon(no deploy, testing only)================
+db.select("*")
+  .from("users")
+  .where({ id: 2 })
+  .then((res) => console.log(res));
