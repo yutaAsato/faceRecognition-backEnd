@@ -1,4 +1,5 @@
-const { knex, db, bcrypt } = require("../utils/admin");
+const { knex, db, bcrypt, pool } = require("../utils/admin");
+const jwt = require("jsonwebtoken");
 //---------------------------------------------------------------------
 //api call to CLARIFAI
 const Clarifai = require("clarifai");
@@ -7,111 +8,137 @@ const app = new Clarifai.App({
   apiKey: "040ad2b7710f4f9883c3f96bac5dab05",
 });
 
+// exports.handleApi = (req, res) => {
+//   app.models
+//     .initModel({ id: Clarifai.DEMOGRAPHICS_MODEL })
+//     .then((generalModel) => generalModel.predict(req.body.input))
+//     .then((data) => res.json(data))
+//     .catch((err) => res.status(400).json(err));
+// };
+
 exports.handleApi = (req, res) => {
-  app.models
-    .initModel({ id: Clarifai.FACE_DETECT_MODEL })
-    .then((generalModel) => generalModel.predict(req.body.input))
+  app.workflow
+    .predict("Demographics", req.body.input)
     .then((data) => res.json(data))
-    .catch((err) => res.status(400).json("unable to respond with API"));
+    .catch((err) => res.status(400).json(err));
 };
 
 //handleImage
-exports.handleImage = (req, res) => {
-  const { id } = req.body;
+exports.handleImage = async (req, res) => {
+  try {
+    const { id } = req.body;
 
-  db("users")
-    .where("id", "=", id)
-    .increment("entries", 1)
-    .returning("entries")
-    .then((entries) => {
-      res.json(entries[0]);
-    })
+    const entries = await pool.query(
+      "update users set entries = entries + 1 where id = $1 returning *",
+      [id]
+    );
 
-    .catch((err) => res.status(404).json("unable to get entries"));
+    res.json(entries.rows[0].entries);
+  } catch (error) {
+    console.log(error.message);
+    res.status(404).json("unable to get entries");
+  }
 };
 
 //handleRegister
-exports.handleRegister = (req, res) => {
-  const { email, name, password } = req.body;
+exports.handleRegister = async (req, res) => {
+  try {
+    const { email, name, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json("invalid inputs");
+    if (!name || !email || !password) {
+      return res.status(400).json("invalid inputs");
+    }
+    const hash = bcrypt.hashSync(password);
+
+    const loginTable = await pool.query(
+      "insert into login (hash, email) values ($1, $2) returning email",
+      [hash, email]
+    );
+
+    const userTable = await pool.query(
+      "insert into users (email , name, joined) values ($1, $2, $3) returning *",
+      [email, name, new Date()]
+    );
+
+    res.json(userTable.rows[0]);
+  } catch (error) {
+    console.error(error.message);
+    res.status(404).json("unable to register");
   }
-  const hash = bcrypt.hashSync(password);
-
-  db.transaction((trx) => {
-    trx
-      .insert({ hash: hash, email: email })
-      .into("login")
-      .returning("email")
-      .then((loginEmail) => {
-        return trx("users")
-          .returning("*")
-          .insert({
-            email: loginEmail[0],
-            name: name,
-            joined: new Date(),
-          })
-          .then((user) => {
-            res.json(user[0]);
-          });
-      })
-      .then(trx.commit)
-      .catch(trx.rollback);
-  }).catch((err) => res.status(404).json("unable to register"));
 };
 
 //profileId
-exports.handleProfileId = (req, res) => {
-  const { id } = req.params;
+exports.handleProfileId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userProfile = await pool.query("select * from users where id = $1", [
+      id,
+    ]);
 
-  db.select("*")
-    .from("users")
-    .where({ id: id })
-    .then((user) => {
-      if (user.length) {
-        res.json(user[0]);
-      } else {
-        res.json("no such user, sorry!");
-      }
-    })
-
-    .catch((err) => res.status(404).json("error fetching user"));
+    res.json(userProfile.rows[0]);
+  } catch (error) {
+    console.error(error.message);
+  }
 };
 
 //handleSignin
-exports.handleSignin = (req, res) => {
-  const { email, name, password } = req.body;
+exports.handleSignin = async (req, res) => {
+  try {
+    const { email, name, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json("invalid inputs");
+    if (!email || !password) {
+      return res.status(400).json("invalid inputs");
+    }
+
+    const loginInfo = await pool.query("select * from login where email = $1", [
+      email,
+    ]);
+
+    const isValid = bcrypt.compareSync(password, loginInfo.rows[0].hash);
+
+    //create jwt and assign the login data to token.
+    let token;
+    if (isValid) {
+      token = jwt.sign({ jwtUser: req.body }, "secretKey");
+    }
+
+    res.json(token);
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json("wrong credentials");
   }
-  db.select("email", "hash")
-    .from("login")
-    .where("email", "=", email)
-    .then((data) => {
-      // console.log(data)
-      const isValid = bcrypt.compareSync(password, data[0].hash);
-      //    console.log(isValid)
-      if (isValid) {
-        return db
-          .select("*")
-          .from("users")
-          .where("email", "=", email)
-          .then((user) => {
-            console.log(user);
-            res.json(user[0]);
-          })
-          .catch((err) => res.status(400).json("unable to get user"));
-      } else {
-        res.status(400).json("wrong credentials,sorry!");
-      }
-    })
-
-    .catch((err) => res.status(400).json("wrong credentials"));
 };
 
-// db.select("*")
-//   .from("users")
-//   .where({ id: 2 })
-//   .then((res) => console.log(res));
+//handleGetUser
+exports.handleGetUser = async (req, res) => {
+  try {
+    //went through 'verifyJWT' middleware check, req.token holds the extracted token from header
+    //'decoded' now holds the payload from token which includes the data assigned to token at login/signup.
+    var decoded = jwt.verify(req.token, "secretKey");
+    console.log(decoded.jwtUser);
+
+    const { email, name, password } = decoded.jwtUser;
+
+    if (!email || !password) {
+      return res.status(400).json("invalid inputs");
+    }
+
+    const loginInfo = await pool.query("select * from login where email = $1", [
+      email,
+    ]);
+
+    const isValid = bcrypt.compareSync(password, loginInfo.rows[0].hash);
+
+    let verifiedUser;
+    if (isValid) {
+      verifiedUser = await pool.query("select * from users where email = $1", [
+        email,
+      ]);
+    }
+
+    res.json(verifiedUser.rows[0]);
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json("wrong credentials");
+  }
+};

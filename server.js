@@ -1,14 +1,11 @@
 const { knex, db, bcrypt } = require("./utils/admin");
 const express = require("express");
 
+const verifyJWT = require("./utils/verifyJWT");
+
 const cors = require("cors");
 const app = require("express")();
 //---------importing from controllers folder--------
-
-const register = require("./controllers/register");
-const signin = require("./controllers/signin");
-const profileId = require("./controllers/profileId");
-const image = require("./controllers/image");
 
 const {
   handleSignin,
@@ -16,9 +13,8 @@ const {
   handleProfileId,
   handleImage,
   handleApi,
+  handleGetUser,
 } = require("./controllers/controllers");
-
-//------------------
 
 //-----middleware--
 
@@ -32,18 +28,14 @@ app.get("/", (req, res) => {
   res.send("it is working!");
 });
 
-//singin
+app.get("/getUser", verifyJWT, handleGetUser);
+
 app.post("/signin", handleSignin);
-
-//register
 app.post("/register", handleRegister);
-
-//profileId
 app.get("/profile/:id", handleProfileId);
 
-//image(update entries)
+//increments count
 app.put("/image", handleImage);
-
 //handleAPI (Clarifai)
 app.post("/imageurl", handleApi);
 
