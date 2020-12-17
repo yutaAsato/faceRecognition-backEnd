@@ -9,7 +9,7 @@ const pool = new Pool({
   user: "postgres",
   password: "oblivion",
   port: 5432,
-  database: "facerecognition",
+  database: "faceRecognition",
 });
 
 //connects this server to psql databse
@@ -33,7 +33,7 @@ const db = knex({
     host: "127.0.0.1",
     user: "postgres",
     password: "oblivion",
-    database: "facerecognition",
+    database: "faceRecognition",
   },
 });
 
