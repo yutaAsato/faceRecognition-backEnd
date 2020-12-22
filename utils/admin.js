@@ -15,26 +15,26 @@ const pool = new Pool({
 //connects this server to psql databse
 const knex = require("knex");
 
-//for heroku----------
-// const db = knex({
-//   client: "pg",
-//   connection: {
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: {
-//       rejectUnauthorized: false,
-//     },
-//   },
-// });
-
-//for local----------
+// for heroku----------
 const db = knex({
   client: "pg",
   connection: {
-    host: "127.0.0.1",
-    user: "postgres",
-    password: "oblivion",
-    database: "faceRecognition",
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   },
 });
+
+//for local----------
+// const db = knex({
+//   client: "pg",
+//   connection: {
+//     host: "127.0.0.1",
+//     user: "postgres",
+//     password: "oblivion",
+//     database: "faceRecognition",
+//   },
+// });
 
 module.exports = { db, knex, bcrypt, express, pool };
