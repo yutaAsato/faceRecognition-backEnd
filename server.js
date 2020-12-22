@@ -55,7 +55,7 @@ app.listen(process.env.PORT || 3000, () => {
 
 //=======DEV ONLY===============================================================================
 //query postgres database here with nodemon(no deploy, testing only)================
-db.select("*")
-  .from("users")
-  .where({ id: 2 })
-  .then((res) => console.log(res));
+// db.select("*")
+//   .from("users")
+//   .where({ id: 2 })
+//   .then((res) => console.log(res));

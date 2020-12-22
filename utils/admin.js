@@ -44,4 +44,4 @@ const pool = new Pool({
 //   },
 // });
 
-module.exports = { db, knex, bcrypt, express, pool };
+module.exports = { knex, bcrypt, express, pool };
