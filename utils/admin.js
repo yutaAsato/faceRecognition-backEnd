@@ -4,13 +4,13 @@ const bcrypt = require("bcrypt-nodejs");
 
 const Pool = require("pg").Pool;
 
-const pool = new Pool({
-  host: "127.0.0.1",
-  user: "postgres",
-  password: "oblivion",
-  port: 5432,
-  database: "faceRecognition",
-});
+// const pool = new Pool({
+//   host: "127.0.0.1",
+//   user: "postgres",
+//   password: "oblivion",
+//   port: 5432,
+//   database: "faceRecognition",
+// });
 
 //connects this server to psql databse
 const knex = require("knex");
