@@ -15,16 +15,23 @@ const pool = new Pool({
 //connects this server to psql databse
 const knex = require("knex");
 
+//============================================
 // for heroku----------
-const db = knex({
-  client: "pg",
-  connection: {
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  },
+// const db = knex({
+//   client: "pg",
+//   connection: {
+//     connectionString: process.env.DATABASE_URL,
+//     ssl: {
+//       rejectUnauthorized: false,
+//     },
+//   },
+// });
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
 });
+
+//==========================================
 
 //for local----------
 // const db = knex({
