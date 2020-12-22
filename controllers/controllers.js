@@ -60,7 +60,14 @@ exports.handleRegister = async (req, res) => {
       [email, name, new Date()]
     );
 
-    res.json(userTable.rows[0]);
+    //create jwt and assign the login data to token.
+    let token;
+    if (userTable.rows[0]) {
+      token = jwt.sign({ jwtUser: req.body }, "secretKey");
+    }
+
+    // console.log(token);
+    res.json(token);
   } catch (error) {
     console.error(error.message);
     res.status(404).json("unable to register");

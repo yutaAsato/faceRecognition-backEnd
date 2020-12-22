@@ -29,7 +29,6 @@ app.get("/", (req, res) => {
 });
 
 app.get("/getUser", verifyJWT, handleGetUser);
-
 app.post("/signin", handleSignin);
 app.post("/register", handleRegister);
 app.get("/profile/:id", handleProfileId);
